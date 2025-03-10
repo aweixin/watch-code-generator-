@@ -1,0 +1,31 @@
+<template>
+  <div class="list-page">
+    <Filter />
+    <el-table :data="tableData">
+      {{each api.parameters}}
+      <el-table-column prop="{{$value.name}}" label="{{$value.name}}"></el-table-column>
+      {{/each}}
+    </el-table>
+  </div>
+</template>
+
+<script>
+import Filter from './components/filter.vue';
+
+export default {
+  components: { Filter },
+  data() {
+    return {
+      tableData: []
+    }
+  },
+  created() {
+    this.fetchList();
+  },
+  methods: {
+    fetchList() {
+      // API调用: {{api.path}}
+    }
+  }
+}
+</script>

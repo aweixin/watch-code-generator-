@@ -1,0 +1,23 @@
+<template>
+  <el-dialog :visible.sync="visible" title="{{api.name}}">
+    <slot></slot>
+    <template #footer>
+      <el-button @click="visible = false">取消</el-button>
+      <el-button type="primary" @click="confirm">确定</el-button>
+    </template>
+  </el-dialog>
+</template>
+
+<script>
+export default {
+  props: {
+    visible: Boolean
+  },
+  methods: {
+    confirm() {
+      this.$emit('confirm');
+      this.visible = false;
+    }
+  }
+}
+</script>
