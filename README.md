@@ -1,11 +1,11 @@
-# my-codegen
+# watch-code-generator
 
 一个基于 OpenAPI 的 Vue 组件代码生成器。
 
 ## 安装
 
 ```bash
-npm install -g my-codegen
+npm install -g watch-code-generator
 ```
 
 ## 创建 codegen.config.js 文件
