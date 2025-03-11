@@ -1,6 +1,6 @@
 {
   "name": "watch-code-generator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "一个灵活的代码生成器，支持自定义模板和交互式界面",
   "main": "index.js",
   "bin": {
@@ -18,7 +18,7 @@
   "author": "xuzhixin",
   "license": "MIT",
   "dependencies": {
-"axios": "^1.6.0",
+    "axios": "^1.6.0",
     "art-template": "^4.13.2",
     "fs-extra": "^11.1.1",
     "chalk": "^4.1.2",
