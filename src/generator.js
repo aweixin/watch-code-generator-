@@ -24,11 +24,15 @@ class Generator {
 
   parseApis(openapiData) {
     const paths = openapiData.paths || {};
-    return Object.entries(paths).map(([path, methods]) => ({
-      name: path.split('/').pop(),
-      path: path,
-      methods: Object.keys(methods)
-    }));
+    return Object.entries(paths).map(([path, methods]) => {
+      const firstMethod = Object.values(methods)[0] || {};
+      const name = firstMethod.summary || firstMethod.description || firstMethod.operationId || path.split('/').pop();
+      return {
+        name,
+        path,
+        methods: Object.keys(methods)
+      };
+    });
   }
 
   generateFile(templatePath, data, outputPath) {
@@ -36,6 +40,11 @@ class Generator {
       if (!fs.existsSync(templatePath)) {
         throw new Error(`模板文件不存在: ${templatePath}`);
       }
+      
+      // 在渲染前输出完整的数据对象
+      console.log('\n=== 模板数据 ===');
+      console.log(JSON.stringify(data, null, 2));
+      console.log('===============\n');
       
       const template = fs.readFileSync(templatePath, 'utf-8');
       const content = artTemplate.render(template, data);
