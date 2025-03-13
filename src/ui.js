@@ -48,7 +48,7 @@ class UI {
         choices: [
           ...filteredChoices,
           new inquirer.Separator(),
-          { name: '退出', value: 'quit' }
+          // { name: '退出', value: 'quit' }
         ],
         pageSize: 10,
         validate: input => {
@@ -60,9 +60,9 @@ class UI {
         onKeypress: (e, key) => {
           if (key.name === 'a') {
             const list = key.list;
-            const items = list.choices.filter(item => !item.disabled && !item.separator);
+            const items = list.choices.filter(item => !item.disabled && !item.separator && item.value !== 'quit');
             items.forEach(item => {
-              if (!item.checked && item.value !== 'quit') {
+              if (!item.checked) {
                 list.toggleChoice(item);
               }
             });
@@ -71,16 +71,32 @@ class UI {
       }
     ]);
 
-    if (answers.apiIndexes.includes('quit')) {
-      console.log(
-        success('\n✔ 已退出代码生成器') +
-        '\n  感谢使用，再见！'
-      );
-      process.exit(0);
-    }
+    // if (answers.apiIndexes.includes('quit')) {
+    //   console.log(
+    //     success('\n✔ 已退出代码生成器') +
+    //     '\n  感谢使用，再见！'
+    //   );
+    //   process.exit(0);
+    // }
+
+
+    console.log(
+      success('\n✔ 已选择API') + 
+      `\n  ${answers.apiIndexes.map(index => this.generator.apis[index].path).join('\n  ')}`);
+      
+    
+
 
     // 如果选择了多个API，进入批量生成模式
     if (answers.apiIndexes.length > 1) {
+      // 过滤掉'quit'选项
+      const validApiIndexes = answers.apiIndexes.filter(index => index !== 'quit');
+      if (validApiIndexes.length === 0) {
+        console.log(
+          warning('\n⚠ 没有选择任何有效的API')
+        );
+        return;
+      }
       const typeChoices = [
         { name: '生成列表', value: 'list' },
         { name: '生成表单', value: 'form' },
@@ -194,13 +210,17 @@ class UI {
 
     try {
       await new Promise(resolve => setTimeout(resolve, 1000)); // 模拟耗时
-      const outputPath = this.generator.generate(api, typeAnswer.type, pathAnswer.path);
+      const outputPath = await this.generator.generate(api, typeAnswer.type, pathAnswer.path);
       
-      spinner.succeed(
-        success('✔ 生成成功!') +
-        `\n  文件路径: ${info(outputPath)}` +
-        `\n  生成类型: ${info(typeAnswer.type)}`
-      );
+      if (outputPath === false) {
+        spinner.info('已取消文件生成');
+      } else {
+        spinner.succeed(
+          success('✔ 生成成功!') +
+          `\n  文件路径: ${info(outputPath)}` +
+          `\n  生成类型: ${info(typeAnswer.type)}`
+        );
+      }
     } catch (e) {
       spinner.fail(
         error('✖ 生成失败') +

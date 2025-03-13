@@ -115,12 +115,14 @@ class Generator {
         }]);
 
         if (!overwrite) {
-          throw new Error('用户取消了文件生成');
+          console.log(warning('\n⚠ 用户取消了文件生成'));
+          return false;
         }
       }
       
       fs.ensureDirSync(path.dirname(outputPath));
       fs.writeFileSync(outputPath, content);
+      return true;
     } catch (e) {
       const errorMessage = e.code === 'EACCES' ? 
         `文件生成失败: 没有写入权限 (${outputPath})` :
@@ -152,7 +154,10 @@ class Generator {
         outputPath = `${cleanBasePath}.vue`;
     }
 
-    this.generateFile(templatePath, { api }, outputPath);
+    const result = this.generateFile(templatePath, { api }, outputPath);
+    if (result === false) {
+      return false;
+    }
     return outputPath;
   }
 
