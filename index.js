@@ -7,6 +7,9 @@ const fs = require('fs');
 
 async function createConfig() {
   const configPath = process.cwd() + '/codegen.config.js';
+  const packagePath = process.cwd() + '/package.json';
+
+  // 创建配置文件
   if (!fs.existsSync(configPath)) {
     const defaultConfig = `module.exports = {
   /**
@@ -40,6 +43,17 @@ async function createConfig() {
 }`;
     fs.writeFileSync(configPath, defaultConfig);
     console.log(chalk.green('✔ 已创建默认配置文件：codegen.config.js'));
+
+    // 更新 package.json
+    if (fs.existsSync(packagePath)) {
+      const packageJson = require(packagePath);
+      if (!packageJson.scripts) {
+        packageJson.scripts = {};
+      }
+      packageJson.scripts.codegen = 'watch-code-generator';
+      fs.writeFileSync(packagePath, JSON.stringify(packageJson, null, 2));
+      console.log(chalk.green('✔ 已添加 npm script: npm run codegen'));
+    }
     return;
   }
   console.log(chalk.yellow('配置文件已存在，跳过创建'));
