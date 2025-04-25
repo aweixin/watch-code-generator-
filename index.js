@@ -27,10 +27,10 @@ async function createConfig() {
    * @default ./templates/list.art
    */
   templates: {
-    list: './templates/list.art',
-    form: './templates/form.art',
-    filter: './templates/filter.art',
-    modal: './templates/modal.art'
+    list: '/templates/list.art',
+    form: '/templates/form.art',
+    filter: '/templates/filter.art',
+    modal: '/templates/modal.art'
   },
   /**
    * 输出路径
@@ -39,7 +39,31 @@ async function createConfig() {
    * @description 请填写输出路径
    * @default @default PATH@default ./view
    */
-  outputDir: '/view'
+  outputDir: './src/views',
+  /**
+   * 生成文件后缀
+   * @type {string}
+   * @example @example EMAIL@example .vue
+   * @description 请填写生成文件后缀
+   * @default @default EMAIL@default .vue
+   */
+  fileSuffix: {
+    list: '.page.vue',
+    form: '.page.vue',
+    filter: '.vue',
+    modal: '.vue'
+  },
+  /**
+   * API 重构函数
+   * @type {function}
+   * @example @example FUNCTION@example(api) {
+   * @description 请填写 API 重构函数
+   * @default @default FUNCTION@default(api) {
+   * @returns {object}
+   */
+    apiRefactor: (api) => {
+      return api;
+    }
 }`;
     fs.writeFileSync(configPath, defaultConfig);
     console.log(chalk.green('✔ 已创建默认配置文件：codegen.config.js'));

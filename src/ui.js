@@ -184,25 +184,46 @@ class UI {
     }
 
     const basePath = `${this.generator.config.outputDir}${api.path}`;
+    const filterModal = basePath.split('/');
+    filterModal.pop();
     const defaultPath = (typeAnswer.type === 'filter' || typeAnswer.type === 'modal')
-      ? `${basePath}/components/${typeAnswer.type}.vue`
-      : `${basePath}.vue`;
+    ? `${filterModal.join('/')}/components/${api.apiPath}_${typeAnswer.type}.vue`
+    : `${basePath}.vue`;
 
-    const pathAnswer = await inquirer.prompt([
+    let finalPath = defaultPath;
+    const { action } = await inquirer.prompt([
       {
-        type: 'input',
-        name: 'path',
-        message: info('请确认或修改生成路径:'),
-        default: defaultPath,
-        validate: input => {
-          if (!input.trim()) {
-            return '路径不能为空';
-          }
-          return true;
-        }
+        type: 'list',
+        name: 'action',
+        message: info(`确认生成路径: ${defaultPath}`),
+        choices: [
+          { name: '确认', value: 'confirm' },
+          { name: '编辑路径', value: 'edit' }
+        ],
+        default: 'confirm'
       }
     ]);
 
+    if (action === 'edit') {
+      const pathAnswer = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'path',
+          message: info('请输入新的路径:'),
+          default: defaultPath,
+          filter: (input) => input.trim() || defaultPath,
+          validate: input => {
+            if (!input.trim()) {
+              return '路径不能为空';
+            }
+            return true;
+          }
+        }
+      ]);
+      finalPath = pathAnswer.path;
+    }
+
+    // 显示生成过程中的加载动画
     const spinner = ora({
       text: info(`正在生成 ${typeAnswer.type} 文件...`),
       spinner: 'dots'
@@ -210,7 +231,7 @@ class UI {
 
     try {
       await new Promise(resolve => setTimeout(resolve, 1000)); // 模拟耗时
-      const outputPath = await this.generator.generate(api, typeAnswer.type, pathAnswer.path);
+      const outputPath = await this.generator.generate(api, typeAnswer.type, finalPath);
       
       if (outputPath === false) {
         spinner.info('已取消文件生成');
