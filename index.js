@@ -4,6 +4,32 @@ const Generator = require('./src/generator');
 const UI = require('./src/ui');
 const chalk = require('chalk');
 const fs = require('fs');
+async function showHelp() {
+  console.log(`
+${chalk.bold.cyan('Watch Code Generator 使用说明')}
+
+${chalk.bold('命令:')}
+  ${chalk.green('watch-code-generator')}       启动代码生成器
+  ${chalk.green('watch-code-generator init')}  创建配置文件
+  ${chalk.green('watch-code-generator help')}  显示帮助信息
+
+${chalk.bold('配置文件:')}
+  codegen.config.js 文件应包含以下配置:
+  - openapiUrl: OpenAPI文档URL
+  - templates: 模板文件路径
+  - outputDir: 输出目录
+  - fileSuffix: 生成文件后缀
+  - apiRefactor: API数据处理函数
+
+${chalk.bold('示例:')}
+  ${chalk.green('# 创建配置文件')}
+  watch-code-generator init
+  
+  ${chalk.green('# 启动代码生成器')}
+  watch-code-generator
+  `);
+}
+
 
 async function createConfig() {
   const configPath = process.cwd() + '/codegen.config.js';
@@ -90,6 +116,26 @@ async function run() {
     process.exit(1);
   }
   const config = require(configPath);
+    // 验证配置
+  const errors = [];
+  if (!config.openapiUrl) {
+    errors.push('缺少 openapiUrl 配置');
+  }
+  
+  if (!config.templates || !config.templates.list) {
+    errors.push('缺少模板配置');
+  }
+  
+  if (!config.outputDir) {
+    errors.push('缺少输出目录配置');
+  }
+  
+  if (errors.length > 0) {
+    console.log(chalk.red('✖ 配置文件验证失败:'));
+    errors.forEach(err => console.log(chalk.yellow(`  - ${err}`)));
+    console.log(chalk.blue('请修改配置文件后重试'));
+    process.exit(1);
+  }
   const generator = new Generator(config);
   await generator.init();
   await UI.start(generator);
@@ -97,6 +143,7 @@ async function run() {
 
 async function main() {
   try {
+    await showHelp();
     const command = process.argv[2];
     if (command === 'init') {
       await createConfig();

@@ -25,6 +25,13 @@ class Generator {
       spinner.succeed(success('✔ OpenAPI 数据加载成功'));
     } catch (e) {
       spinner.fail(error(`✖ OpenAPI 请求失败: ${e.message}`));
+      if (e.code === 'ENOTFOUND') {
+        console.log(warning('  可能原因: 网络连接问题或URL不正确'));
+        console.log(info('  建议: 检查网络连接和OpenAPI URL配置'));
+      } else if (e.response && e.response.status) {
+        console.log(warning(`  服务器返回状态码: ${e.response.status}`));
+        console.log(info('  建议: 检查API密钥或访问权限'));
+      }
       throw e;
     }
   }
