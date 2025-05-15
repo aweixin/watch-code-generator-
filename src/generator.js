@@ -17,6 +17,49 @@ class Generator {
     this.apis = [];
   }
 
+  /**
+   * 创建自定义API
+   * @param {Object} customApi - 自定义API信息
+   * @returns {Object} - 创建的API对象
+   */
+  createCustomApi(customApi) {
+    const apiPath = customApi.path.slice(1).replace(/\//g, '_');
+    const api = this.config.apiRefactor({
+      name: customApi.name,
+      path: customApi.path,
+      apiPath,
+      tags: customApi.tags || '',
+      methods: customApi.methods || ['get'],
+      requestBody: customApi.parameters ? this.formatParameters(customApi.parameters) : null,
+      responseBody: customApi.responseFields ? this.formatParameters(customApi.responseFields) : null,
+      parameters: customApi.parameters || []
+    });
+    
+    this.apis.push(api);
+    return api;
+  }
+  
+  /**
+   * 格式化参数为API所需格式
+   * @param {Array} parameters - 参数数组
+   * @returns {Object} - 格式化后的参数对象
+   */
+  formatParameters(parameters) {
+    const properties = {};
+    
+    parameters.forEach(param => {
+      properties[param.name] = {
+        type: param.type || 'string',
+        title: param.title || param.name,
+        description: param.description || '',
+        required: param.required || false,
+        format: param.format || ''
+      };
+    });
+    
+    return properties;
+  }
+
   async init() {
     const spinner = require('ora')('加载 OpenAPI 数据...').start();
     try {

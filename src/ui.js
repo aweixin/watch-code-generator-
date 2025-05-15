@@ -21,6 +21,12 @@ class UI {
       name: `${api.name} (${warning(api.path)})`,
       value: index
     }));
+    
+    // 添加自定义API选项
+    choices.push({
+      name: chalk.bold.green('+ 添加自定义API'),
+      value: 'custom'
+    });
 
     // 添加筛选功能
     const { filter } = await inquirer.prompt([{
@@ -33,6 +39,7 @@ class UI {
     // 根据关键字筛选API
     const filteredChoices = filter
       ? choices.filter(choice => {
+          if (choice.value === 'custom') return true; // 保留自定义API选项
           const api = this.generator.apis[choice.value];
           return api.name.toLowerCase().includes(filter.toLowerCase()) ||
                  api.path.toLowerCase().includes(filter.toLowerCase()) ||
@@ -60,7 +67,7 @@ class UI {
         onKeypress: (e, key) => {
           if (key.name === 'a') {
             const list = key.list;
-            const items = list.choices.filter(item => !item.disabled && !item.separator && item.value !== 'quit');
+            const items = list.choices.filter(item => !item.disabled && !item.separator && item.value !== 'quit' && item.value !== 'custom');
             items.forEach(item => {
               if (!item.checked) {
                 list.toggleChoice(item);
@@ -70,6 +77,18 @@ class UI {
         }
       }
     ]);
+    
+    // 处理自定义API选项
+    if (answers.apiIndexes.includes('custom')) {
+      // 移除custom选项
+      answers.apiIndexes = answers.apiIndexes.filter(item => item !== 'custom');
+      
+      // 收集自定义API信息
+      await this.createCustomApi();
+      
+      // 重新显示主菜单
+      return this.showMainMenu();
+    }
 
     // if (answers.apiIndexes.includes('quit')) {
     //   console.log(
@@ -90,7 +109,7 @@ class UI {
     // 如果选择了多个API，进入批量生成模式
     if (answers.apiIndexes.length > 1) {
       // 过滤掉'quit'选项
-      const validApiIndexes = answers.apiIndexes.filter(index => index !== 'quit');
+      const validApiIndexes = answers.apiIndexes.filter(index => index !== 'quit' && index !== 'custom');
       if (validApiIndexes.length === 0) {
         console.log(
           warning('\n⚠ 没有选择任何有效的API')
@@ -158,6 +177,131 @@ class UI {
     await this.showMainMenu();
   }
 
+  /**
+   * 创建自定义API
+   * 收集用户输入的API信息并创建自定义API
+   */
+  static async createCustomApi() {
+    console.log(title('\n创建自定义API'));
+    
+    // 收集API基本信息
+    const apiInfo = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'name',
+        message: info('API名称:'),
+        validate: input => input.trim() ? true : 'API名称不能为空'
+      },
+      {
+        type: 'input',
+        name: 'path',
+        message: info('API路径 (以/开头):'),
+        validate: input => {
+          if (!input.trim()) return 'API路径不能为空';
+          if (!input.startsWith('/')) return 'API路径必须以/开头';
+          return true;
+        }
+      },
+      {
+        type: 'checkbox',
+        name: 'methods',
+        message: info('HTTP方法:'),
+        choices: ['get', 'post', 'put', 'delete', 'patch'],
+        default: ['get'],
+        validate: input => input.length ? true : '请至少选择一种HTTP方法'
+      },
+      {
+        type: 'input',
+        name: 'tags',
+        message: info('标签 (可选):'),
+        default: ''
+      }
+    ]);
+    
+    // 收集参数信息
+    const parameters = [];
+    let addMoreParams = true;
+    
+    console.log(info('\n添加API参数 (请求参数和响应字段):'));
+    
+    while (addMoreParams) {
+      const paramInfo = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'name',
+          message: info('参数名称:'),
+          validate: input => input.trim() ? true : '参数名称不能为空'
+        },
+        {
+          type: 'list',
+          name: 'type',
+          message: info('参数类型:'),
+          choices: ['string', 'number', 'boolean', 'object', 'array'],
+          default: 'string'
+        },
+        {
+          type: 'input',
+          name: 'description',
+          message: info('参数描述 (可选):'),
+          default: ''
+        },
+        {
+          type: 'confirm',
+          name: 'required',
+          message: info('是否必填:'),
+          default: false
+        }
+      ]);
+      
+      parameters.push(paramInfo);
+      
+      const { addMore } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'addMore',
+          message: info('是否继续添加参数?'),
+          default: false
+        }
+      ]);
+      
+      addMoreParams = addMore;
+    }
+    
+    // 创建自定义API
+    const customApi = {
+      ...apiInfo,
+      parameters
+    };
+    
+    try {
+      const spinner = ora('正在创建自定义API...').start();
+      const api = this.generator.createCustomApi(customApi);
+      spinner.succeed(success('✔ 自定义API创建成功!'));
+      console.log(info(`API名称: ${api.name}`));
+      console.log(info(`API路径: ${api.path}`));
+      console.log(info(`参数数量: ${parameters.length}`));
+      
+      // 询问是否立即生成代码
+      const { generateNow } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'generateNow',
+          message: info('是否立即为此API生成代码?'),
+          default: true
+        }
+      ]);
+      
+      if (generateNow) {
+        await this.showGenerateMenu(api);
+      }
+      
+      return api;
+    } catch (e) {
+      console.log(error(`\n✖ 创建自定义API失败: ${e.message}`));
+      return null;
+    }
+  }
+  
   static async showGenerateMenu(api) {
     console.log(title(`\n选择的API: ${api.path}`));
 
