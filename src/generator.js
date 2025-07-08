@@ -174,7 +174,7 @@ declare module '@vue/runtime-core' {
           methods: methodsArray,
           requestBody,
           responseBody,
-      });
+      },paths);
     });
   }
 
