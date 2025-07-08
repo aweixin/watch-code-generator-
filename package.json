@@ -1,6 +1,6 @@
 {
   "name": "watch-code-generator",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "一个灵活的代码生成器，支持自定义模板和交互式界面",
   "main": "index.js",
   "bin": {
