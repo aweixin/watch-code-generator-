@@ -117,10 +117,11 @@ class UI {
         return;
       }
       const typeChoices = [
-        { name: '生成列表', value: 'list' },
-        { name: '生成表单', value: 'form' },
-        { name: '生成筛选', value: 'filter' },
-        { name: '生成弹窗', value: 'modal' }
+        ...Object.keys(this.generator.config.templates).map(key => ({
+          name: `生成${key}`,
+          value: key
+        })),
+        { name: '返回主菜单', value: 'back' }
       ];
 
       const { types } = await inquirer.prompt([{
@@ -135,6 +136,10 @@ class UI {
           return true;
         }
       }]);
+
+      if (types.includes('back')) {
+        return;
+      }
 
       try {
         const apis = answers.apiIndexes.map(index => this.generator.apis[index]);
@@ -306,10 +311,10 @@ class UI {
     console.log(title(`\n选择的API: ${api.path}`));
 
     const typeChoices = [
-      { name: '生成列表', value: 'list' },
-      { name: '生成表单', value: 'form' },
-      { name: '生成筛选', value: 'filter' },
-      { name: '生成弹窗', value: 'modal' },
+      ...Object.keys(this.generator.config.templates).map(key => ({
+        name: `生成${key}`,
+        value: key
+      })),
       { name: '返回主菜单', value: 'back' }
     ];
 
